@@ -8,4 +8,4 @@ if not darwin_token:
     raise Exception("DARWIN_TOKEN environmental variable must be set")
 
 d = DepartureBoard(token=darwin_token)
-d.tabulate_all("TRO")
+print d.tabulate_all("TRO")

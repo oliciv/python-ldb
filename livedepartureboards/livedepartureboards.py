@@ -17,7 +17,7 @@ class DepartureBoard:
         data = self.get_data(crs_code)
         s = [[service['destination_name'], service['std'], service['etd']] for service in data['services']]
         tab_headers = ['Destination', 'STD', 'ETD']
-        print tabulate(s, headers=tab_headers)
+        return tabulate(s, headers=tab_headers)
 
     def get_data(self, crs_code):
         """
