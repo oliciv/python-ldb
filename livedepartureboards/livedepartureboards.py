@@ -15,8 +15,11 @@ class DepartureBoard:
         Generate a tabulated list of all services calling at this station
         """
         data = self.get_data(crs_code)
-        s = [[service['destination_name'], service['std'], service['etd']] for service in data['services']]
-        tab_headers = ['Destination', 'STD', 'ETD']
+        s = []
+        for service in data['services']:
+            calling_points_str = ", ".join([p['locationName'] for p in service['calling_points']])
+            s.append([service['destination_name'], service['std'], service['etd'], calling_points_str])
+        tab_headers = ['Destination', 'STD', 'ETD', 'Calling at',]
         return tabulate(s, headers=tab_headers)
 
     def get_data(self, crs_code):
@@ -38,24 +41,24 @@ class DepartureBoard:
             returned['messages'] = None
         _services = []
         for service in station_info.trainServices.service:
-            this_service = (
-                {
-                 'sta': getattr(service, 'sta', None),
-                 'eta': getattr(service, 'eta', None),
-                 'std': getattr(service, 'std', None),
-                 'etd': getattr(service, 'etd', None),
-                 'platform': service.platform,
-                 'operator': service.operator,
-                 'operatorCode': service.operatorCode,
-                 'serviceType': service.serviceType,
-                 'serviceID': service.serviceID,
+            this_service = {}
+            _attributes = ['sta', 'eta', 'std', 'etd', 'platform', 'operator',
+                           'operatorCode', 'serviceType', 'serviceID',]
+            for attribute in _attributes:
+                this_service[attribute] = getattr(service, attribute, None)
+            this_service.update({
                  'origin_name': service.origin.location[0].locationName,
                  'origin_crs': service.origin.location[0].locationName,
                  'destination_name': service.destination.location[0].locationName,
                  'destination_crs': service.destination.location[0].locationName,
-                }
-
-            )
+                })
+            _calling_points = []
+            for calling_point in getattr(service, 'subsequentCallingPoints')[0][0]['callingPoint']:
+                _calling_points.append({'locationName': calling_point['locationName'],
+                                        'crs': calling_point['crs'],
+                                        'st': calling_point['st'],
+                                        'et': calling_point['et']})
+            this_service.update({'calling_points': _calling_points})
             _services.append(this_service)
         returned['services'] = _services
         return returned
